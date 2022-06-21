@@ -47,3 +47,15 @@ def checkPageNumber(url):
         else:
             verif = False
     return liens
+
+""" Récupère tous les livres d'une page"""
+def checkAllBooks(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    books = []
+    x = 0
+    while x < len(soup.find_all('h3')):
+        for book in soup.find_all('h3')[x]:
+            books.append('https://books.toscrape.com/catalogue' + book['href'][8:])
+            x += 1
+    return books
