@@ -59,3 +59,16 @@ def checkAllBooks(url):
             books.append('https://books.toscrape.com/catalogue' + book['href'][8:])
             x += 1
     return books
+
+""" Récupère tous les livres d'une catégorie """
+def checkAllBooksCategory(url):
+    x = 0
+    pages = checkPageNumber(url)
+    liens = []
+    while x < len(pages):
+        page = pages[x]
+        page_book = checkAllBooks(page)
+        for books in page_book:
+            liens.append(books)
+        x += 1
+    return liens
