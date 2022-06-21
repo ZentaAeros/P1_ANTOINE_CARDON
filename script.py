@@ -89,3 +89,44 @@ def checkAllCategory(url):
         liens[str(x)] = [nomCategorie, newLink]
         x += 1
     return liens
+
+""" Récupère les infos des livres d'une catégorie donnée """
+def BooksInfosAllCategory(url):
+    en_tete = [
+        'description',
+        'product_page_url',
+        'universal_ product_code (upc)',
+        'title',
+        'price_including_tax',
+        'price_excluding_tax',
+        'number_available',
+        'category',
+        'review_rating',
+        'image_url'
+        ]
+
+    category = checkAllCategory(url)
+    x = 3
+    while x < 53:
+        categoryName = category[str(x)][0] ## Récupère le nom de la catégorie
+        categoryNameFile = category[str(x)][0] + '/' + category[str(x)][0] + '.csv' ## Chemin d'enregistrement des fichiers
+        categoryLink = category[str(x)][1] ## Lien de la catégorie
+        x += 1
+        """ Création du fichier CSV avec ajout des informations pour chaque livre """
+        if not os.path.exists(categoryName):
+                os.makedirs(categoryName)
+        with open(categoryNameFile, 'a') as fichier:
+            writer = csv.writer(fichier, delimiter=',')
+            writer.writerow(en_tete)
+            for livre in checkAllBooksCategory(categoryLink):
+                writer.writerow(bookInfos(livre))
+
+        """ Téléchargement des images par catégorie"""
+        for livre in checkAllBooksCategory(categoryLink):
+            book = bookInfos(livre)
+            myBook = book[3].replace('/', ' ')
+            imgTitle = categoryName + '/' + myBook + '.jpg'
+            urllib.request.urlretrieve(book[9], imgTitle)
+            print(imgTitle)
+
+BooksInfosAllCategory('https://books.toscrape.com/index.html')
