@@ -72,3 +72,20 @@ def checkAllBooksCategory(url):
             liens.append(books)
         x += 1
     return liens
+
+""" Récupère toutes les catégories """
+def checkAllCategory(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    x = 3
+    liens = {}
+    while x < 53:
+        category = soup.find_all('li')[x].a['href']
+        nomCategorie = soup.find_all('li')[x].a.text
+        nomCategorie = nomCategorie.replace(' ', '')
+        nomCategorie = nomCategorie.replace('\n', '')
+        newLink = 'https://books.toscrape.com/' + category
+        liens[str(x)] = [nomCategorie, newLink]
+        x += 1
+    return liens
