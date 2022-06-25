@@ -1,97 +1,98 @@
 import re
+from tkinter import E
 import requests
 from bs4 import BeautifulSoup
 import csv
 import os
 import urllib.request
 
-""" Récupère toutes les informations d'un livre"""
-def bookInfos(url):
+def html_parser_page(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
+    return soup
 
-    productDescription = soup.find_all('p')[3].text
+""" Récupère toutes les informations d'un livre"""
+def get_infos_book(link_book_page):
+    book_page = html_parser_page(link_book_page)
+
+    productDescription = book_page.find_all('p')[3].text
     replaceDescription = productDescription.replace(',', '\,')
-    universalProductCode = soup.find_all('td')[0].text
-    priceIncludingTaxe = soup.find_all('td')[3].text[1:]
-    priceExcludingTaxe = soup.find_all('td')[2].text[1:]
-    numberAvailable = soup.find_all('td')[5].text[10:][:2]
-    reviewRating = soup.find_all('td')[6].text
-    title = soup.find('h1').text
-    category = soup.find_all('a')[3].text
-    sourceImage = 'http://books.toscrape.com' + soup.find('img')['src'][5:]
-    link = response.url
+    universalProductCode = book_page.find_all('td')[0].text
+    priceIncludingTaxe = book_page.find_all('td')[3].text[1:]
+    priceExcludingTaxe = book_page.find_all('td')[2].text[1:]
+    numberAvailable = book_page.find_all('td')[5].text[10:][:2]
+    reviewRating = book_page.find_all('td')[6].text
+    title = book_page.find('h1').text
+    category = book_page.find_all('a')[3].text
+    sourceImage = 'http://books.toscrape.com' + book_page.find('img')['src'][5:]
+    link = link_book_page
 
-    book_description = [replaceDescription, link, universalProductCode, title, priceIncludingTaxe, priceExcludingTaxe, numberAvailable, category, reviewRating, sourceImage]
-
+    book_description = [replaceDescription, link_book_page, universalProductCode, title, priceIncludingTaxe, priceExcludingTaxe, numberAvailable, category, reviewRating, sourceImage]
     return book_description
 
 """ Récupère toutes les pages d'une catégorie """
-def checkPageNumber(url):
-    nouveauLien = url
-    page = requests.get(nouveauLien)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    pageCourante = 'index.html'
-    verif = True
+def get_number_page_category(link_category):
+    category = html_parser_page(link_category)
+    link_page = link_category
+    page_courante = 'index.html'
+    check = True
     x = 1
-    liens = []
-    while verif == True:
+    list_pages_category = []
+    while check:
         x += 1
-        page = requests.get(nouveauLien)
-        soup = BeautifulSoup(page.content, 'html.parser')
-        if(page.status_code == 200):
-            liens.append(nouveauLien)
-            numeroPage = 'page-{}.html'.format(x)
-            nouveauLien = nouveauLien.replace(pageCourante, numeroPage)
-            pageCourante = numeroPage
+        category_page = requests.get(link_page)
+        soup = BeautifulSoup(category_page.content, 'html.parser')
+        if(category_page.status_code == 200):
+            list_pages_category.append(link_page)
+            numero_page = 'page-{}.html'.format(x)
+            link_page = link_page.replace(page_courante, numero_page)
+            page_courante = numero_page
         else:
-            verif = False
-    return liens
+            check = False
+    return list_pages_category
 
 """ Récupère tous les livres d'une page"""
-def checkAllBooks(url):
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    books = []
+def get_all_books_from_page(link_page_category):
+    page_category = html_parser_page(link_page_category)
+    link_books_from_page = []
     x = 0
-    while x < len(soup.find_all('h3')):
-        for book in soup.find_all('h3')[x]:
-            books.append('https://books.toscrape.com/catalogue' + book['href'][8:])
+    while x < len(page_category.find_all('h3')):
+        for book in page_category.find_all('h3')[x]:
+            link_books_from_page.append('https://books.toscrape.com/catalogue' + book['href'][8:])
             x += 1
-    return books
+    return link_books_from_page
 
 """ Récupère tous les livres d'une catégorie """
-def checkAllBooksCategory(url):
+def get_books_from_category(link_category):
     x = 0
-    pages = checkPageNumber(url)
-    liens = []
-    while x < len(pages):
-        page = pages[x]
-        page_book = checkAllBooks(page)
-        for books in page_book:
-            liens.append(books)
+    pages_from_category = get_number_page_category(link_category)
+    link_books_from_category = []
+    while x < len(pages_from_category):
+        page_category = pages_from_category[x]
+        page_book = get_all_books_from_page(page_category)
+        for book in page_book:
+            link_books_from_category.append(book)
         x += 1
-    return liens
+    return link_books_from_category
 
 """ Récupère toutes les catégories """
-def checkAllCategory(url):
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
+def get_all_category(link_page):
+    link_website = html_parser_page(link_page)
 
     x = 3
-    liens = {}
+    category_page = {}
     while x < 53:
-        category = soup.find_all('li')[x].a['href']
-        nomCategorie = soup.find_all('li')[x].a.text
-        nomCategorie = nomCategorie.replace(' ', '')
-        nomCategorie = nomCategorie.replace('\n', '')
-        newLink = 'https://books.toscrape.com/' + category
-        liens[str(x)] = [nomCategorie, newLink]
+        category = link_website.find_all('li')[x].a['href']
+        category_name = link_website.find_all('li')[x].a.text
+        category_name = category_name.replace(' ', '')
+        category_name = category_name.replace('\n', '')
+        category_link = 'https://books.toscrape.com/' + category
+        category_page[str(x)] = [category_name, category_link]
         x += 1
-    return liens
+    return category_page
 
 """ Récupère les infos des livres d'une catégorie donnée """
-def BooksInfosAllCategory(url):
+def get_books_infos_from_category(url):
     en_tete = [
         'description',
         'product_page_url',
@@ -105,28 +106,28 @@ def BooksInfosAllCategory(url):
         'image_url'
         ]
 
-    category = checkAllCategory(url)
+    category_pages = get_all_category(url)
     x = 3
     while x < 53:
-        categoryName = category[str(x)][0] ## Récupère le nom de la catégorie
-        categoryNameFile = category[str(x)][0] + '/' + category[str(x)][0] + '.csv' ## Chemin d'enregistrement des fichiers
-        categoryLink = category[str(x)][1] ## Lien de la catégorie
+        category_name = category_pages[str(x)][0] ## Récupère le nom de la catégorie
+        category_name_access_path = category_pages[str(x)][0] + '/' + category_pages[str(x)][0] + '.csv' ## Chemin d'enregistrement des fichiers
+        link_category = category_pages[str(x)][1] ## Lien de la catégorie
         x += 1
-        """ Création du fichier CSV avec ajout des informations pour chaque livre """
-        if not os.path.exists(categoryName):
-                os.makedirs(categoryName)
-        with open(categoryNameFile, 'a') as fichier:
+        """Création du fichier CSV avec ajout des informations pour chaque livre"""
+        if not os.path.exists(category_name):
+                os.makedirs(category_name)
+        with open(category_name_access_path, 'a') as fichier:
             writer = csv.writer(fichier, delimiter=',')
             writer.writerow(en_tete)
-            for livre in checkAllBooksCategory(categoryLink):
-                writer.writerow(bookInfos(livre))
+            for link_book in get_books_from_category(link_category):
+                writer.writerow(get_infos_book(link_book))
 
-        """ Téléchargement des images par catégorie"""
-        for livre in checkAllBooksCategory(categoryLink):
-            book = bookInfos(livre)
-            myBook = book[3].replace('/', ' ')
-            imgTitle = categoryName + '/' + myBook + '.jpg'
-            urllib.request.urlretrieve(book[9], imgTitle)
-            print(imgTitle)
+            """Téléchargement des images par catégorie"""
+            for link_book in get_books_from_category(link_category):
+                book_infos = get_infos_book(link_book)
+                book = book_infos[3].replace('/', ' ') ## Test
+                imgTitle = category_name + '/' + book + '.jpg'
+                urllib.request.urlretrieve(book_infos[9], imgTitle)
+                print(imgTitle)
 
-BooksInfosAllCategory('https://books.toscrape.com/index.html')
+print(get_books_infos_from_category('http://books.toscrape.com/index.html'))
