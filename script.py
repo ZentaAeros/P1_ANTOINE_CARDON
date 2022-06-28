@@ -80,6 +80,7 @@ def get_all_category(link_page):
     link_website = html_parser_page(link_page)
 
     x = 3
+    key_number = 0
     category_page = {}
     while x < 53:
         category = link_website.find_all('li')[x].a['href']
@@ -87,11 +88,12 @@ def get_all_category(link_page):
         category_name = category_name.replace(' ', '')
         category_name = category_name.replace('\n', '')
         category_link = 'https://books.toscrape.com/' + category
-        category_page[str(x)] = [category_name, category_link]
+        category_page[str(key_number)] = [category_name, category_link]
         x += 1
+        key_number += 1
     return category_page
 
-""" Récupère les infos des livres d'une catégorie donnée """
+""" Récupère les infos des livres d'une catégorie donnée et les enregistre """
 def get_books_infos_from_category(url):
     en_tete = [
         'description',
@@ -107,27 +109,26 @@ def get_books_infos_from_category(url):
         ]
 
     category_pages = get_all_category(url)
-    x = 3
-    while x < 53:
+    x = 0
+    
+    while x < len(category_pages):
         category_name = category_pages[str(x)][0] ## Récupère le nom de la catégorie
         category_name_access_path = category_pages[str(x)][0] + '/' + category_pages[str(x)][0] + '.csv' ## Chemin d'enregistrement des fichiers
         link_category = category_pages[str(x)][1] ## Lien de la catégorie
         x += 1
-        """Création du fichier CSV avec ajout des informations pour chaque livre"""
+        
         if not os.path.exists(category_name):
                 os.makedirs(category_name)
         with open(category_name_access_path, 'a') as fichier:
             writer = csv.writer(fichier, delimiter=',')
             writer.writerow(en_tete)
             for link_book in get_books_from_category(link_category):
-                writer.writerow(get_infos_book(link_book))
-
-            """Téléchargement des images par catégorie"""
-            for link_book in get_books_from_category(link_category):
                 book_infos = get_infos_book(link_book)
-                book = book_infos[3].replace('/', ' ') ## Test
-                imgTitle = category_name + '/' + book + '.jpg'
-                urllib.request.urlretrieve(book_infos[9], imgTitle)
-                print(imgTitle)
-
-print(get_books_infos_from_category('http://books.toscrape.com/index.html'))
+                writer.writerow(book_infos)
+                print('CSV OK')
+                book = book_infos[3].replace('/', ' ') ## Retire les slashs dans le titre des images 
+                titre_image = category_name + '/' + book + '.jpg'
+                urllib.request.urlretrieve(book_infos[9], titre_image)
+                print(titre_image)
+                
+get_books_infos_from_category('http://books.toscrape.com/index.html')
