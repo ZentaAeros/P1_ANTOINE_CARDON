@@ -5,7 +5,7 @@ En éxecutant ce script, les données du site http://books.toscrape.com/index.ht
 ## Comment executer ce script ?
 * Veuillez créer un dossier à l'emplacement souhaité où sera placé le projet.
 * Vous pouvez désormais clôner ce dépot dans le dossier fraîchement créé :
-* `* Une sous-puce`
+`* Une sous-puce`
 * Utilisez la commande : git clone https://github.com/ZentaAeros/projet1_openclassrooms.git
 * Vous pouvez à présent créer un environnement virtuel afin d'installer les paquets nécessaire à l'éxecution du script :
 * Commande pour créer l'environnement virtuel : python3 -m venv env
