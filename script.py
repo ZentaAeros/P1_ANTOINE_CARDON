@@ -16,7 +16,7 @@ def get_infos_book(link_book_page):
     book_page = html_parser_page(link_book_page)
 
     productDescription = book_page.find_all('p')[3].text
-    replaceDescription = productDescription.replace(',', '\,')
+    replaceDescription = productDescription.replace(',', ' ') ## Virgule remplacée par un espace pour éviter un changement de cellule dans le fichier SCV
     universalProductCode = book_page.find_all('td')[0].text
     priceIncludingTaxe = book_page.find_all('td')[3].text[1:]
     priceExcludingTaxe = book_page.find_all('td')[2].text[1:]
@@ -26,8 +26,20 @@ def get_infos_book(link_book_page):
     category = book_page.find_all('a')[3].text
     sourceImage = 'http://books.toscrape.com' + book_page.find('img')['src'][5:]
     link = link_book_page
+    stars = book_page.find('p', class_='star-rating').get('class')[1]
+    rating = 0
+    if "One" in stars:
+        rating = 1
+    elif "Two" in stars:
+        rating = 2
+    elif "Thr" in stars:
+        rating = 3
+    elif "Fou" in stars:
+        rating = 4
+    elif "Fiv" in stars:
+        rating = 5
 
-    book_description = [replaceDescription, link_book_page, universalProductCode, title, priceIncludingTaxe, priceExcludingTaxe, numberAvailable, category, reviewRating, sourceImage]
+    book_description = [replaceDescription, link_book_page, universalProductCode, title, priceIncludingTaxe, priceExcludingTaxe, numberAvailable, category, rating, sourceImage]
     return book_description
 
 """ Récupère toutes les pages d'une catégorie """
